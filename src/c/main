@@ -1,0 +1,118 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+#include "mpg123.h"
+#include "mpglib.h"
+#include "kernel.h"
+#include "soundcode.h"
+
+#include <OSLib:os.h>
+#include <OSLib:wimp.h>
+
+#define DECODEDFRAG 16384
+
+#define USE_UPCALL
+
+#ifdef USE_UPCALL
+#define OS_UpCall 0x33
+#define WAIT { _kernel_swi_regs ARM; ARM.r[0]=6; ARM.r[1]=0; _kernel_swi(OS_UpCall,&ARM,&ARM); }
+
+#else
+#define WAIT {}
+#endif
+
+static char buf[16384];
+static char out[32768];
+
+static struct mpstr mp;
+static FILE *infile;
+
+static void finishall(void)
+{
+  soundcode_stop();
+  ExitMP3(&mp);
+  fclose(infile);
+}
+
+int main(int argc, char *argv[])
+{
+  int size, pos; //, reasoncode;
+  int len,ret,freespace,used,played,total;
+  int maxbuf, sRate;
+  FILE *infile;
+
+  infile = fopen(argv[1], "rb");
+  if (!infile) {
+    printf("Can't open input file!\n");
+    return -1;
+  }
+
+  if (argc>2) {
+    sRate = atoi(argv[2]);
+    if (sRate != 1 && sRate != 2 && sRate != 4) sRate = 4;
+  } else sRate = 4;
+
+  if ((maxbuf=soundcode_play(44100/sRate, 2)) < 0) {
+    printf("Can't init sound playback device!\n");
+    return -1;
+  }
+  atexit(finishall);
+  total = 0x7f000000;
+
+  InitMP3(&mp, sRate);
+
+  len = fread(buf,1,16384,infile);
+  //check for ID3
+  if (memcmp(buf, "ID3", 3)==0){
+    int skip=(((unsigned char)buf[6])<<23)|(((unsigned char)buf[7])<<15)|
+             (((unsigned char)buf[8])<<7)|((unsigned char)buf[9]);
+    ret = decodeMP3(&mp,buf+10+skip,len-10-skip,out,20000,&size);
+  } else ret = decodeMP3(&mp,buf,len,out,20000,&size);
+  //
+  pos = size;
+  do {
+    ret = decodeMP3(&mp,NULL,0,out + pos,DECODEDFRAG,&size);
+    if (ret == MP3_OK) pos += size;
+  } while(pos < 16000 && ret == MP3_OK);
+  size = pos;
+
+  while(len > 0 || ret == MP3_OK) {
+    soundcode_readposition(&played, &freespace);
+    if (freespace >= size){
+      soundcode_fill((short *)out, size/4, &used, &total);
+      if (ret != MP3_OK) {
+        len = fread(buf,1,16384,infile);
+        if (len <= 0) {
+        } else {
+          ret = decodeMP3(&mp,buf,len,out,DECODEDFRAG,&size);
+          pos = size;
+          do {
+            ret = decodeMP3(&mp,NULL,0,out + pos,DECODEDFRAG,&size);
+            if (ret == MP3_OK) pos += size;
+          } while(pos < 16000 && ret == MP3_OK);
+          size = pos;
+        }
+      } else {
+        int pos = 0;
+        do {
+          ret = decodeMP3(&mp,NULL,0,out + pos,DECODEDFRAG,&size);
+          if (ret == MP3_OK) pos += size;
+        } while(pos < 16000 && ret == MP3_OK);
+        size = pos;
+      }
+    } else {
+      WAIT
+    }
+  }
+
+  do {
+    WAIT
+    soundcode_readposition(&played, &freespace);
+  } while(freespace!=maxbuf);
+
+  soundcode_stop();
+  fclose(infile);
+
+  return 0;
+}
+

@@ -1,0 +1,67 @@
+StupidPlayer version 0.3
+------------------------
+
+Simple MP3 Player for eQ ARM DDS.
+It should also work happilly on RiscStation 7500, Mico and A7000+.
+
+With 11025Hz 16bit stereo output, it should be ok up to about 72000ko/sec video modes.
+It is working well under the following resolutions :
+640x480x32@60
+800x600x16@72
+1024x768x8@70
+1280x1024x8@54
+So understand that it works on every usable resolutions (anyway, in other modes the computer becomes really too slow).
+
+With 22050Hz 16bit stereo output, it should be ok up to about 36000ko/sec video modes.
+It is working well under the following resolutions :
+640x480x16@60
+800x600x8@72
+1024x768x4@70
+1280x1024x4@54
+See !Run file to switch between 11, 22 and 44 KHz modes.
+
+44100Hz mode doesn't work for now (but is it really usefull anyway since 22050 mode is really perfect ?).
+
+All test are done with 128kbps files (vbr and 192kbps files need smaller resolutions). Computer is configured to use 50ns memory (even if ours is 60ns).
+
+Tricks :
+--------
+You can make modes with smaller frame rate (for example 1024x768@65), it will help a lot with complex files (the key problem is bandwith, not really processing power).
+
+Put that on your mimemap file ($.!Boot.Resources.!Internet.files.MimeMap)
+audio/mpeg			MPEG		1ad	.mp3
+Press F12 and Type : ReadMimeMap... It's usefull for CD-Rom.
+
+Jukebox mode :
+--------------
+Uncheck the right option in !Run file (and check the others)
+Use a text editor (example for StrongED)
+1 - Open a new Obey File (right click on StrongED icon)
+2 - Shift drag all the wanted files
+3 - Select all...
+4 - Do a "Bloc - Process - Sort", if necessary.
+5 - Save (F3)
+You can now run your playlist with a simple click.
+
+History :
+---------
+29 may 2001 - dct64 optimisations, for a big performance gain.
+              support for skipping ID3 tag and normal ending
+20 may 2001 - Added correct exit from player.
+18 may 2001 - Now for sound use native sound SWI(v0.2).
+05 may 2001 - First normal working version, used replayer codecs (v0.1).
+
+This software is placed under GNU/GPL licence.
+
+None bugs :
+-----------
+If you quit the player, the dynamic area is not always freed -> We work on it.
+Some mp3 with curious headers will not work -> Should be OK...
+
+To compile :
+------------
+Use "amu".
+It will need, latest 32 bits library and oslib.
+Included Absolute files are squeezed so don't worry about the size of yours :)
+
+Please see http://www.eqrd.net for new releases...

@@ -1,0 +1,4 @@
+Set StupidPlayer$Dir <Obey$Dir>
+IconSprites <StupidPlayer$Dir>.!Sprites
+Set Alias$@RunType_1AD Run <StupidPlayer$Dir>.!Run %*0
+Set File$Type_1AD AMPEG

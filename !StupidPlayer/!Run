@@ -1,0 +1,24 @@
+Set StupidPlayer$Dir <Obey$Dir>
+IconSprites <Mp3Lite$Dir>.!Sprites
+|Run <Mp3Lite$Dir>.!Boot
+if "%*0"="" then error 0 Click on MP3 file (type &1AD)!!!
+
+RMEnsure UtilityModule 3.10 Error This application requires RISC OS 3.10 or later
+RMEnsure UtilityModule 3.60 RMEnsure CallASWI 0.02 RMLoad System:Modules.CallASWI
+RMEnsure UtilityModule 3.60 RMEnsure CallASWI 0.02 Error This application requires CallASWI 0.02 or later
+RMEnsure FPEmulator 4.03 RMLoad System:Modules.FPEmulator
+RMEnsure FPEmulator 4.03 Error This application requires FPEmulator 4.03 or later
+RMEnsure SharedCLibrary 5.17 RMLoad System:Modules.CLib
+RMEnsure SharedCLibrary 5.17 Error This application requires SharedCLibrary 5.17 or later
+
+WimpSlot -min 180K -max 180K
+
+|11025Hz Stereo 16Bit (use about 668 KB of memory)
+|TaskWindow "<StupidPlayer$Dir>.StupidPlayer %*0 4" -quit -name StupidPlayer
+
+|22050Hz Stereo 16Bit (use about 1100 KB of memory)
+TaskWindow "<StupidPlayer$Dir>.StupidPlayer %*0 2" -quit -name StupidPlayer
+
+|44100Hz Stereo 16Bit (use about 1720 KB of memory)
+|<StupidPlayer$Dir>.off
+|<StupidPlayer$Dir>.StupidPlayer %*0 1
